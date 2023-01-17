@@ -27,7 +27,7 @@ $$
 $$
 LANGUAGE 'plpgsql';
 
-CREATE TRIGGER tr_transactions_insert
+CREATE TRIGGER tr_transaction_categories_insert
 AFTER INSERT ON transaction_categories
 FOR EACH ROW
 EXECUTE FUNCTION tr_transaction_categories_insert_fnc();

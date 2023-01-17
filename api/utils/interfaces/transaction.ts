@@ -1,6 +1,5 @@
 export interface ITransaction {
     id: number
-    type: TransactionType
     bankId: number
 }
 
