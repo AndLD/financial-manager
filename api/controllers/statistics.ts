@@ -1,7 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
-import { Transaction } from '../models/entities/Transaction'
-import { TransactionCategory } from '../models/entities/TransactionCategory'
 
 interface IGetStatisticsQuery {
     categoryIds: string
@@ -29,9 +27,9 @@ async function getStatistics(req: FastifyRequest<{ Querystring: IGetStatisticsQu
     //     .execute()
 
     const statistics = await dataSource.query(
-        `SELECT SUM(amount) FROM transaction_categories WHERE transactionId IN (
-            SELECT id FROM transactions WHERE timestamp > $1 AND timestamp < $2) GROUP BY categoryId`,
-        [fromPeriod, toPeriod]
+        `SELECT category_id, SUM(amount) FROM transaction_categories WHERE category_id IN ($1) AND transaction_id IN (
+            SELECT id FROM transactions WHERE timestamp > $2 AND timestamp < $3) GROUP BY category_id`,
+        [categoryIds, fromPeriod, toPeriod]
     )
 
     reply.send(statistics)
