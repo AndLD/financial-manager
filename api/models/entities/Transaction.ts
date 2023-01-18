@@ -6,6 +6,9 @@ export class Transaction implements ITransaction {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column()
+    @Column({ name: 'bank_id' })
     bankId: number
+
+    @Column()
+    timestamp: string
 }

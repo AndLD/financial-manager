@@ -1,6 +1,9 @@
+import { IPostTransactionCategoryBody } from './transaction-category'
+
 export interface ITransaction {
     id: number
     bankId: number
+    timestamp: string
 }
 
 export interface ITransactionInfo {
@@ -8,6 +11,11 @@ export interface ITransactionInfo {
     amount: number
     type: TransactionType
     bankId: number
+}
+
+export interface IPostTransactionBody {
+    bankId: number
+    transactionCategories: IPostTransactionCategoryBody[]
 }
 
 export enum TransactionType {
