@@ -3,10 +3,17 @@ import { FastifySchema } from 'fastify'
 export const transactionsValidation: {
     [key: string]: FastifySchema
 } = {
-    getById: {
-        params: {
-            id: {
-                type: 'number'
+    get: {
+        querystring: {
+            type: 'object',
+            required: ['page'],
+            properties: {
+                page: {
+                    type: 'number'
+                },
+                size: {
+                    type: 'number'
+                }
             }
         }
     },

@@ -5,6 +5,7 @@ export const statisticsValidation: {
 } = {
     get: {
         querystring: {
+            type: 'object',
             required: ['categoryIds', 'fromPeriod', 'toPeriod'],
             properties: {
                 categoryIds: {

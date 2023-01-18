@@ -1,7 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 import { ITransactionCategory } from '../../utils/interfaces/transaction-category'
 
-@Entity({ name: 'transaction-categories' })
+@Entity({ name: 'transaction_categories' })
 export class TransactionCategory implements ITransactionCategory {
     @PrimaryGeneratedColumn()
     id: number

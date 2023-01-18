@@ -5,6 +5,11 @@ export interface ITransactionCategory {
     transactionId: number
 }
 
+export interface ITransactionCategoryInfo {
+    amount: number
+    categoryId: number
+}
+
 export interface IPostTransactionCategoryBody {
     amount: number
     categoryId: number

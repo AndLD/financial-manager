@@ -1,4 +1,4 @@
-import { IPostTransactionCategoryBody } from './transaction-category'
+import { IPostTransactionCategoryBody, ITransactionCategoryInfo } from './transaction-category'
 
 export interface ITransaction {
     id: number
@@ -11,6 +11,8 @@ export interface ITransactionInfo {
     amount: number
     type: TransactionType
     bankId: number
+    timestamp: string
+    transactionCategories: ITransactionCategoryInfo[]
 }
 
 export interface IPostTransactionBody {

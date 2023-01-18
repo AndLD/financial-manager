@@ -1,6 +1,6 @@
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
-import fastify from 'fastify'
+import fastify, { FastifyError } from 'fastify'
 import 'reflect-metadata'
 import { dataSource } from './models'
 import { apiRouter } from './routers'
@@ -23,11 +23,9 @@ export function startApp() {
 
         app.register(apiRouter, { prefix: '/api' })
 
-        app.setErrorHandler(function (error, request, reply) {
+        app.setErrorHandler(function (error: FastifyError, _, reply) {
             this.log.error(error)
-            reply
-                .status(error.statusCode || 500)
-                .send({ msg: error.message, code: error.statusCode || error.code || 500 })
+            reply.status(error.statusCode || 500).send({ message: error.message, statusCode: error.statusCode || 500 })
         })
 
         await app.ready()

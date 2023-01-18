@@ -9,28 +9,31 @@ interface IGetStatisticsQuery {
 
 async function getStatistics(req: FastifyRequest<{ Querystring: IGetStatisticsQuery }>, reply: FastifyReply) {
     const categoryIds = req.query.categoryIds?.split(',')?.map((str) => parseInt(str))
+
+    if (!categoryIds) {
+        return reply.status(400).send({ message: 'Wrong categoryIds query value', statusCode: 400 })
+    }
+
     const { fromPeriod, toPeriod } = req.query
 
-    // const transactionCategories = await dataSource
-    //     .getRepository(TransactionCategory)
-    //     .createQueryBuilder()
-    //     .select('SUM(amount)')
-    //     .whereInIds(categoryIds.map((categoryId) => ({ categoryId })))
-    //     .groupBy('transactionId')
-
-    // const transactions = await dataSource
-    //     .getRepository(Transaction)
-    //     .createQueryBuilder()
-    //     .select('id')
-    //     .addSelect()
-    //     .where('timestamp > :fromPeriod AND timestamp < :toPeriod', { fromPeriod, toPeriod })
-    //     .execute()
-
-    const statistics = await dataSource.query(
-        `SELECT category_id, SUM(amount) FROM transaction_categories WHERE category_id IN ($1) AND transaction_id IN (
-            SELECT id FROM transactions WHERE timestamp > $2 AND timestamp < $3) GROUP BY category_id`,
-        [categoryIds, fromPeriod, toPeriod]
+    const rawStatistics = await dataSource.query(
+        `SELECT name AS category, SUM(amount) AS amount FROM transaction_categories
+        LEFT JOIN categories ON categories.id = category_id
+        WHERE category_id IN (
+            ${categoryIds.join(',')}
+        ) AND transaction_id IN (
+            SELECT id FROM transactions WHERE timestamp > $1 AND timestamp < $2
+        ) GROUP BY categories.name`,
+        [fromPeriod, toPeriod]
     )
+
+    const statistics: {
+        [key: string]: number
+    } = {}
+
+    for (const row of rawStatistics) {
+        statistics[row.category] = row.amount
+    }
 
     reply.send(statistics)
 }

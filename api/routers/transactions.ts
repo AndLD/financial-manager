@@ -4,8 +4,7 @@ import { transactionsValidation } from '../validation/transactions'
 
 export async function transactionsRouter(fastify: FastifyInstance, _: FastifyPluginOptions) {
     fastify
-        .get('/', transactionControllers.getTransactions)
-        .get('/:id', { schema: transactionsValidation.getById }, transactionControllers.getTransaction)
+        .get('/', { schema: transactionsValidation.get }, transactionControllers.getTransactions)
         .post('/', { schema: transactionsValidation.post }, transactionControllers.postTransaction)
         .delete('/:id', { schema: transactionsValidation.delete }, transactionControllers.deleteTransaction)
 }

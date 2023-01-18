@@ -1,8 +1,9 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
 import { Transaction } from '../models/entities/Transaction'
+import { TransactionCategory } from '../models/entities/TransactionCategory'
 import { errors } from '../utils/constants'
-import { IPostTransactionBody } from '../utils/interfaces/transaction'
+import { IPostTransactionBody, ITransactionInfo, TransactionType } from '../utils/interfaces/transaction'
 
 async function getTransactions(req: FastifyRequest, reply: FastifyReply) {
     const transactions = await dataSource.getRepository(Transaction).find()
@@ -10,20 +11,38 @@ async function getTransactions(req: FastifyRequest, reply: FastifyReply) {
     reply.send(transactions)
 }
 
-async function getTransaction(req: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) {
-    const transaction = await dataSource.getRepository(Transaction).findOneBy({ id: req.params.id })
-
-    if (!transaction) {
-        return reply.status(404).send()
-    }
-
-    reply.send(transaction)
-}
-
 async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody }>, reply: FastifyReply) {
-    const transaction = await dataSource.getRepository(Transaction).save(req.body)
+    await dataSource.transaction(async (transactionalManager) => {
+        const transaction = await transactionalManager.getRepository(Transaction).save({ bankId: req.body.bankId })
 
-    reply.send(transaction)
+        const promises = []
+
+        for (const transactionCategory of req.body.transactionCategories) {
+            promises.push(
+                transactionalManager.getRepository(TransactionCategory).save({
+                    ...transactionCategory,
+                    transactionId: transaction.id
+                })
+            )
+        }
+
+        const transactionCategories = await Promise.all(promises)
+
+        const transactionAmount = transactionCategories
+            .map(({ amount }) => amount)
+            .reduce((previous, current) => previous + current, 0)
+
+        const transactionType = transactionAmount >= 0 ? TransactionType.PROFITABLE : TransactionType.CONSUMABLE
+
+        const transactionInfo: ITransactionInfo = {
+            ...transaction,
+            amount: transactionAmount,
+            type: transactionType,
+            transactionCategories: transactionCategories.map(({ amount, categoryId }) => ({ amount, categoryId }))
+        }
+
+        reply.send(transactionInfo)
+    })
 }
 
 async function deleteTransaction(req: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) {
@@ -38,7 +57,6 @@ async function deleteTransaction(req: FastifyRequest<{ Params: { id: number } }>
 
 export const transactionControllers = {
     getTransactions,
-    getTransaction,
     postTransaction,
     deleteTransaction
 }
