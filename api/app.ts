@@ -3,6 +3,7 @@ import fastifyHelmet from '@fastify/helmet'
 import { fastifySwagger } from '@fastify/swagger'
 import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import fastify, { FastifyError } from 'fastify'
+import fs from 'fs'
 import 'reflect-metadata'
 import { dataSource } from './models'
 import { apiRouter } from './routers'
@@ -37,11 +38,17 @@ export function startApp() {
         })
 
         await app.ready()
-        app.swagger()
+
+        const yaml = app.swagger({ yaml: true })
+        fs.writeFile('./swagger.yaml', yaml, (err) => {
+            if (err) {
+                app.log.error(err)
+            }
+        })
 
         await dataSource.initialize()
 
-        app.listen({ host: '127.0.0.1', port: 8080 }, (err) => {
+        app.listen({ host: '0.0.0.0', port: 8080 }, (err) => {
             if (err) {
                 app.log.error(err)
                 process.exit(1)

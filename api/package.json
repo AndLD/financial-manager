@@ -6,7 +6,7 @@
     "scripts": {
         "prod": "node ts-built/index",
         "dev": "nodemon index.ts",
-        "test": "env-cmd -f .env.development jest --runInBand",
+        "test": "env-cmd -f .env jest --runInBand",
         "clear-jest": "jest --clearCache",
         "build": "tsc"
     },

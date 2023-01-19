@@ -1,5 +1,14 @@
 version: '3.0'
 services:
+    api:
+        container_name: financial-manager_api
+        hostname: financial-manager_api
+        build: api/
+        ports:
+            - '8080:8080'
+        restart: unless-stopped
+        depends_on:
+            - postgres
     postgres:
         image: 'postgres:15.1'
         container_name: 'fm_postgres'

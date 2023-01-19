@@ -12,7 +12,7 @@ export function createDataSource() {
 
     return new DataSource({
         type: 'postgres',
-        host: process.env.POSTGRES_HOST || '127.0.0.1',
+        host: process.env.POSTGRES_HOST || process.env.NODE_ENV == 'production' ? 'fm_postgres' : '127.0.0.1',
         port: port ? parseInt(port) : 5432,
         username: process.env.POSTGRES_USER || 'root',
         password: process.env.POSTGRES_PASSWORD || '12345',

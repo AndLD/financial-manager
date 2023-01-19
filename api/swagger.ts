@@ -9,7 +9,7 @@ export const swaggerSchema: FastifyRegisterOptions<SwaggerOptions> | undefined =
     openapi: {
         openapi: '3.0.3',
         info: {
-            title: 'Financial Manager',
+            title: 'Financial Manager API',
             description: packageJson.description,
             contact: {
                 name: 'Andrii Larionov',
