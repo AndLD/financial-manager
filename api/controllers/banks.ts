@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
 import { Bank } from '../models/entities/Bank'
-import { IPostBankBody, IPutBankBody } from '../utils/interfaces/bank'
+import { IBank, IPostBankBody, IPutBankBody } from '../utils/interfaces/bank'
 
 async function getBanks(req: FastifyRequest, reply: FastifyReply) {
     const banks = await dataSource.getRepository(Bank).createQueryBuilder().select().orderBy('id').getMany()
@@ -20,7 +20,15 @@ async function getBank(req: FastifyRequest<{ Params: { id: number } }>, reply: F
 }
 
 async function postBank(req: FastifyRequest<{ Body: IPostBankBody }>, reply: FastifyReply) {
-    const bank = await dataSource.getRepository(Bank).save(req.body)
+    const insertResult = await dataSource
+        .getRepository(Bank)
+        .createQueryBuilder()
+        .insert()
+        .values(req.body)
+        .returning('*')
+        .execute()
+
+    const bank = insertResult.generatedMaps[0] as IBank
 
     reply.send(bank)
 }

@@ -9,9 +9,12 @@ interface IGetStatisticsQuery {
 
 async function getStatistics(req: FastifyRequest<{ Querystring: IGetStatisticsQuery }>, reply: FastifyReply) {
     const categoryIds = req.query.categoryIds
-        ?.split(',')
-        ?.map((str) => parseInt(str))
-        .join(',')
+
+    for (const categoryId of categoryIds.split(',')) {
+        if (isNaN(parseInt(categoryId))) {
+            return reply.status(400).send({ message: 'Invalid categoryIds!', statusCode: 400 })
+        }
+    }
 
     if (!categoryIds) {
         return reply.status(400).send({ message: 'Wrong categoryIds query value', statusCode: 400 })
@@ -22,11 +25,11 @@ async function getStatistics(req: FastifyRequest<{ Querystring: IGetStatisticsQu
     const rawStatistics = await dataSource.query(
         `SELECT name AS category, SUM(amount) AS amount FROM transaction_categories
         LEFT JOIN categories ON categories.id = category_id
-        WHERE category_id IN ($1) 
+        WHERE category_id IN (${categoryIds}) 
         AND transaction_id IN (
-            SELECT id FROM transactions WHERE timestamp > $2 AND timestamp < $3
+            SELECT id FROM transactions WHERE timestamp > $1 AND timestamp < $2
         ) GROUP BY categories.name`,
-        [categoryIds, fromPeriod, toPeriod]
+        [fromPeriod, toPeriod]
     )
 
     const statistics: {

@@ -3,7 +3,8 @@ import { dataSource } from '../models'
 import { Transaction } from '../models/entities/Transaction'
 import { TransactionCategory } from '../models/entities/TransactionCategory'
 import { errors } from '../utils/constants'
-import { IPostTransactionBody, ITransactionInfo, TransactionType } from '../utils/interfaces/transaction'
+import { IPostTransactionBody, ITransaction, ITransactionInfo, TransactionType } from '../utils/interfaces/transaction'
+import { ITransactionCategory, ITransactionCategoryInfo } from '../utils/interfaces/transaction-category'
 
 interface IGetTransactionsQuery {
     page: number
@@ -18,7 +19,9 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
         return reply.status(400).send({ message: 'Pagination parameters should be positive numbers', statusCode: 400 })
     }
 
-    const transactions = dataSource
+    const total = dataSource.getRepository(Transaction).count()
+
+    const transactions = await dataSource
         .getRepository(Transaction)
         .createQueryBuilder()
         .select()
@@ -27,9 +30,44 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
         .offset((page - 1) * size)
         .getMany()
 
-    const total = dataSource.getRepository(Transaction).count()
+    const transactionInfos: ITransactionInfo[] = []
 
-    await Promise.all([transactions, total])
+    if (transactions.length) {
+        const transactionCategories = await dataSource
+            .getRepository(TransactionCategory)
+            .createQueryBuilder()
+            .select()
+            .where('transaction_id IN (:...transactionIds)', { transactionIds: transactions.map(({ id }) => id) })
+            .getMany()
+
+        for (const transaction of transactions) {
+            const _transactionCategories: ITransactionCategoryInfo[] = []
+
+            const transactionAmount = transactionCategories.reduce((previous, current, i) => {
+                if (current.transactionId === transaction.id) {
+                    _transactionCategories.push({
+                        amount: transactionCategories[i].amount,
+                        categoryId: transactionCategories[i].categoryId
+                    })
+
+                    return previous + current.amount
+                }
+
+                return previous
+            }, 0)
+
+            const transactionType = transactionAmount >= 0 ? TransactionType.PROFITABLE : TransactionType.CONSUMABLE
+
+            const transactionInfo: ITransactionInfo = {
+                ...transaction,
+                amount: transactionAmount,
+                type: transactionType,
+                transactionCategories: _transactionCategories
+            }
+
+            transactionInfos.push(transactionInfo)
+        }
+    }
 
     const meta = {
         page,
@@ -38,14 +76,22 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
     }
 
     reply.send({
-        transactions: await transactions,
+        transactions: transactionInfos,
         meta
     })
 }
 
 async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody }>, reply: FastifyReply) {
     await dataSource.transaction(async (transactionalManager) => {
-        const transaction = await transactionalManager.getRepository(Transaction).save({ bankId: req.body.bankId })
+        const insertResult = await dataSource
+            .getRepository(Transaction)
+            .createQueryBuilder()
+            .insert()
+            .values(req.body)
+            .returning('*')
+            .execute()
+
+        const transaction = insertResult.generatedMaps[0] as ITransaction
 
         const promises = []
 
@@ -60,18 +106,7 @@ async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody 
 
         const transactionCategories = await Promise.all(promises)
 
-        const transactionAmount = transactionCategories
-            .map(({ amount }) => amount)
-            .reduce((previous, current) => previous + current, 0)
-
-        const transactionType = transactionAmount >= 0 ? TransactionType.PROFITABLE : TransactionType.CONSUMABLE
-
-        const transactionInfo: ITransactionInfo = {
-            ...transaction,
-            amount: transactionAmount,
-            type: transactionType,
-            transactionCategories: transactionCategories.map(({ amount, categoryId }) => ({ amount, categoryId }))
-        }
+        const transactionInfo = _getTransactionInfo(transaction, transactionCategories)
 
         reply.send(transactionInfo)
     })
@@ -85,6 +120,23 @@ async function deleteTransaction(req: FastifyRequest<{ Params: { id: number } }>
     }
 
     reply.send()
+}
+
+function _getTransactionInfo(transaction: ITransaction, transactionCategories: ITransactionCategory[]) {
+    const transactionAmount = transactionCategories
+        .map(({ amount }) => amount)
+        .reduce((previous, current) => previous + current, 0)
+
+    const transactionType = transactionAmount >= 0 ? TransactionType.PROFITABLE : TransactionType.CONSUMABLE
+
+    const transactionInfo: ITransactionInfo = {
+        ...transaction,
+        amount: transactionAmount,
+        type: transactionType,
+        transactionCategories: transactionCategories.map(({ amount, categoryId }) => ({ amount, categoryId }))
+    }
+
+    return transactionInfo
 }
 
 export const transactionControllers = {

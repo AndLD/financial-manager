@@ -70,8 +70,29 @@ export const transactionsRouterSchemas: IEntityOperations = {
         },
         response: {
             200: {
-                type: 'array',
-                items: transactionSchema
+                type: 'object',
+                required: ['transactions', 'meta'],
+                properties: {
+                    transactions: {
+                        type: 'array',
+                        items: transactionSchema
+                    },
+                    meta: {
+                        type: 'object',
+                        required: ['page', 'size', 'total'],
+                        properties: {
+                            page: {
+                                type: 'integer'
+                            },
+                            size: {
+                                type: 'integer'
+                            },
+                            total: {
+                                type: 'integer'
+                            }
+                        }
+                    }
+                }
             },
             '4xx': error4xxSchema,
             '5xx': error5xxSchema
