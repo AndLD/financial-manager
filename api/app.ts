@@ -1,9 +1,12 @@
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
+import { fastifySwagger } from '@fastify/swagger'
+import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import fastify, { FastifyError } from 'fastify'
 import 'reflect-metadata'
 import { dataSource } from './models'
 import { apiRouter } from './routers'
+import { swaggerSchema } from './swagger'
 import { FRONTEND_URL } from './utils/constants'
 
 export const app = fastify({
@@ -21,6 +24,11 @@ export function startApp() {
         }
         app.register(fastifyCors, corsOptions)
 
+        await app.register(fastifySwagger, swaggerSchema)
+        await app.register(fastifySwaggerUi, {
+            prefix: '/swagger'
+        })
+
         app.register(apiRouter, { prefix: '/api' })
 
         app.setErrorHandler(function (error: FastifyError, _, reply) {
@@ -29,6 +37,7 @@ export function startApp() {
         })
 
         await app.ready()
+        app.swagger()
 
         await dataSource.initialize()
 

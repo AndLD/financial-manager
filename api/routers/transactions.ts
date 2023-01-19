@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { transactionControllers } from '../controllers/transactions'
-import { transactionsValidation } from '../validation/transactions'
+import { transactionsRouterSchemas } from '../schemas/transactions'
 
 export async function transactionsRouter(fastify: FastifyInstance, _: FastifyPluginOptions) {
     fastify
-        .get('/', { schema: transactionsValidation.get }, transactionControllers.getTransactions)
-        .post('/', { schema: transactionsValidation.post }, transactionControllers.postTransaction)
-        .delete('/:id', { schema: transactionsValidation.delete }, transactionControllers.deleteTransaction)
+        .get('/', { schema: transactionsRouterSchemas.get }, transactionControllers.getTransactions)
+        .post('/', { schema: transactionsRouterSchemas.post }, transactionControllers.postTransaction)
+        .delete('/:id', { schema: transactionsRouterSchemas.delete }, transactionControllers.deleteTransaction)
 }

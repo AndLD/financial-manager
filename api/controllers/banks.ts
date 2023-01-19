@@ -1,10 +1,10 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
 import { Bank } from '../models/entities/Bank'
 import { IPostBankBody, IPutBankBody } from '../utils/interfaces/bank'
 
 async function getBanks(req: FastifyRequest, reply: FastifyReply) {
-    const banks = await dataSource.getRepository(Bank).find()
+    const banks = await dataSource.getRepository(Bank).createQueryBuilder().select().orderBy('id').getMany()
 
     reply.send(banks)
 }

@@ -1,7 +1,7 @@
 {
     "name": "financial-manager-api",
-    "version": "1.0.0",
-    "description": "",
+    "version": "0.8.0",
+    "description": "Test task",
     "main": "ts-built/index.js",
     "scripts": {
         "prod": "node ts-built/index",
@@ -14,12 +14,14 @@
         "type": "git",
         "url": "git+https://github.com/AndLD/financial-manager-api.git"
     },
-    "keywords": [],
+    "keywords": [
+        "bank",
+        "category",
+        "transaction",
+        "statistics"
+    ],
     "author": "<Andrii Larionov, andrey.larionov.me@gmail.com>",
     "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/AndLD/financial-manager-api/issues"
-    },
     "homepage": "https://github.com/AndLD/financial-manager-api#readme",
     "devDependencies": {
         "@types/jest": "^29.2.5",
@@ -35,6 +37,8 @@
     "dependencies": {
         "@fastify/cors": "^8.2.0",
         "@fastify/helmet": "^10.1.0",
+        "@fastify/swagger": "^8.3.0",
+        "@fastify/swagger-ui": "^1.3.0",
         "dotenv": "^16.0.3",
         "fastify": "^4.11.0",
         "pg": "^8.8.0",

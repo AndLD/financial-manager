@@ -1,4 +1,4 @@
-export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
+export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost'
 
 export const errors = {
     BAD_HTTP_METHOD: { message: 'Unexpected http request method', statusCode: 405 },

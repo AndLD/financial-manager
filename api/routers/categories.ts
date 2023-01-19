@@ -1,12 +1,12 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { categoryControllers } from '../controllers/categories'
-import { categoriesValidation } from '../validation/categories'
+import { categoriesRouterSchemas } from '../schemas/categories'
 
 export async function categoriesRouter(fastify: FastifyInstance, _: FastifyPluginOptions) {
     fastify
-        .get('/', categoryControllers.getCategories)
-        .get('/:id', { schema: categoriesValidation.getById }, categoryControllers.getCategory)
-        .post('/', { schema: categoriesValidation.post }, categoryControllers.postCategory)
-        .put('/:id', { schema: categoriesValidation.put }, categoryControllers.putCategory)
-        .delete('/:id', { schema: categoriesValidation.delete }, categoryControllers.deleteCategory)
+        .get('/', { schema: categoriesRouterSchemas.get }, categoryControllers.getCategories)
+        .get('/:id', { schema: categoriesRouterSchemas.getById }, categoryControllers.getCategory)
+        .post('/', { schema: categoriesRouterSchemas.post }, categoryControllers.postCategory)
+        .put('/:id', { schema: categoriesRouterSchemas.put }, categoryControllers.putCategory)
+        .delete('/:id', { schema: categoriesRouterSchemas.delete }, categoryControllers.deleteCategory)
 }

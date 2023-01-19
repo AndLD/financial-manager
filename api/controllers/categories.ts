@@ -1,10 +1,10 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
 import { Category } from '../models/entities/Category'
 import { IPostCategoryBody, IPutCategoryBody } from '../utils/interfaces/category'
 
 async function getCategories(req: FastifyRequest, reply: FastifyReply) {
-    const categories = await dataSource.getRepository(Category).find()
+    const categories = await dataSource.getRepository(Category).createQueryBuilder().select().orderBy('id').getMany()
 
     reply.send(categories)
 }
