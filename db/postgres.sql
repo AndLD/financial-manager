@@ -6,7 +6,7 @@ CREATE TABLE banks (
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(20) NOT NULL
+    name VARCHAR(20) UNIQUE NOT NULL
 );
 
 CREATE TABLE transactions (

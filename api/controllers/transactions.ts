@@ -5,10 +5,42 @@ import { TransactionCategory } from '../models/entities/TransactionCategory'
 import { errors } from '../utils/constants'
 import { IPostTransactionBody, ITransactionInfo, TransactionType } from '../utils/interfaces/transaction'
 
-async function getTransactions(req: FastifyRequest, reply: FastifyReply) {
-    const transactions = await dataSource.getRepository(Transaction).find()
+interface IGetTransactionsQuery {
+    page: number
+    size?: number
+}
 
-    reply.send(transactions)
+async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactionsQuery }>, reply: FastifyReply) {
+    const page = req.query.page
+    const size = req.query.size || 10
+
+    if (page <= 0 || size <= 0) {
+        return reply.status(400).send({ message: 'Pagination parameters should be positive numbers', statusCode: 400 })
+    }
+
+    const transactions = dataSource
+        .getRepository(Transaction)
+        .createQueryBuilder()
+        .select()
+        .orderBy('timestamp', 'DESC')
+        .limit(size)
+        .offset((page - 1) * size)
+        .getMany()
+
+    const total = dataSource.getRepository(Transaction).count()
+
+    await Promise.all([transactions, total])
+
+    const meta = {
+        page,
+        size,
+        total: await total
+    }
+
+    reply.send({
+        transactions: await transactions,
+        meta
+    })
 }
 
 async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody }>, reply: FastifyReply) {
