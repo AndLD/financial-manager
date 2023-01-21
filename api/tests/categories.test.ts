@@ -1,21 +1,41 @@
-import { BANKS_ROUTE, NEW_TEST_BANK_NAME, NOT_EXISTENT_BANK_ID, TEST_BANK_NAME } from './utils/constants'
+import {
+    CATEGORIES_ROUTE,
+    NEW_TEST_CATEGORY_NAME,
+    NOT_EXISTENT_CATEGORY_ID,
+    TEST_CATEGORY_NAME
+} from './utils/constants'
 import { useState } from './utils/hooks'
-import { postBank } from './utils/requests'
 import { testRequest } from './utils/test-request'
 
-describe('Banks', () => {
-    const [idState, setId] = useState<number | null>(null)
+describe('Categories', () => {
+    const [idState, setId] = useState<string | null>(null)
 
-    describe(`[POST ${BANKS_ROUTE}] Add Bank`, () => {
-        it('Should response 200', async () =>
-            await postBank({
-                callback: setId
-            }))
+    describe(`[POST ${CATEGORIES_ROUTE}] Add Category`, () => {
+        it('Should response 200', async () => {
+            await testRequest(
+                {
+                    method: 'POST',
+                    route: CATEGORIES_ROUTE,
+                    body: {
+                        name: TEST_CATEGORY_NAME
+                    },
+                    resCode: 200
+                },
+                (res) => {
+                    expect(parseInt(res.body.id?.toString())).not.toBeNaN()
+                    expect(res.body.id).toBeGreaterThan(0)
+
+                    expect(res.body.name).toBe(TEST_CATEGORY_NAME)
+
+                    setId(res.body.id)
+                }
+            )
+        })
 
         it('Should response 400, when name is not specified', async () => {
             await testRequest({
                 method: 'POST',
-                route: BANKS_ROUTE,
+                route: CATEGORIES_ROUTE,
                 body: {},
                 resBody: {
                     message: `body must have required property 'name'`,
@@ -24,14 +44,25 @@ describe('Banks', () => {
                 resCode: 400
             })
         })
+
+        it('Should response 400, when name already exists', async () => {
+            await testRequest({
+                method: 'POST',
+                route: CATEGORIES_ROUTE,
+                body: {
+                    name: TEST_CATEGORY_NAME
+                },
+                resCode: 400
+            })
+        })
     })
 
-    describe(`[GET ${BANKS_ROUTE}] Get all Banks`, () => {
+    describe(`[GET ${CATEGORIES_ROUTE}] Get all Categories`, () => {
         it('Should response 200', async () => {
             await testRequest(
                 {
                     method: 'GET',
-                    route: BANKS_ROUTE,
+                    route: CATEGORIES_ROUTE,
                     resCode: 200
                 },
                 (res) => {
@@ -40,8 +71,7 @@ describe('Banks', () => {
                         expect.arrayContaining([
                             {
                                 id: idState.state,
-                                name: TEST_BANK_NAME,
-                                balance: 0
+                                name: TEST_CATEGORY_NAME
                             }
                         ])
                     )
@@ -50,17 +80,16 @@ describe('Banks', () => {
         })
     })
 
-    describe(`[GET ${BANKS_ROUTE}/:id] Get Bank by id`, () => {
+    describe(`[GET ${CATEGORIES_ROUTE}/:id] Get Category by id`, () => {
         it('Should response 200', async () => {
             await testRequest({
                 method: 'GET',
-                route: BANKS_ROUTE,
+                route: CATEGORIES_ROUTE,
                 id: idState.state,
                 resCode: 200,
                 resBody: {
                     id: idState.state,
-                    name: TEST_BANK_NAME,
-                    balance: 0
+                    name: TEST_CATEGORY_NAME
                 }
             })
         })
@@ -68,22 +97,22 @@ describe('Banks', () => {
         it('Should response 404, when does not exist', async () => {
             await testRequest({
                 method: 'GET',
-                route: BANKS_ROUTE,
-                id: NOT_EXISTENT_BANK_ID,
+                route: CATEGORIES_ROUTE,
+                id: NOT_EXISTENT_CATEGORY_ID,
                 resCode: 404
             })
         })
     })
 
-    describe(`[PUT ${BANKS_ROUTE}/:id] Update Bank`, () => {
+    describe(`[PUT ${CATEGORIES_ROUTE}/:id] Update Category`, () => {
         it('Should response 200', async () => {
             await testRequest(
                 {
                     method: 'PUT',
-                    route: BANKS_ROUTE,
+                    route: CATEGORIES_ROUTE,
                     id: idState.state,
                     body: {
-                        name: NEW_TEST_BANK_NAME
+                        name: NEW_TEST_CATEGORY_NAME
                     },
                     resCode: 200
                 },
@@ -91,9 +120,7 @@ describe('Banks', () => {
                     expect(parseInt(res.body.id?.toString())).not.toBeNaN()
                     expect(res.body.id).toBeGreaterThan(0)
 
-                    expect(res.body.name).toBe(NEW_TEST_BANK_NAME)
-
-                    expect(res.body.balance).toBe(0)
+                    expect(res.body.name).toBe(NEW_TEST_CATEGORY_NAME)
                 }
             )
         })
@@ -101,7 +128,7 @@ describe('Banks', () => {
         it('Should response 400, when name is not specified', async () => {
             await testRequest({
                 method: 'PUT',
-                route: BANKS_ROUTE,
+                route: CATEGORIES_ROUTE,
                 id: idState.state,
                 body: {},
                 resBody: {
@@ -115,21 +142,21 @@ describe('Banks', () => {
         it('Should response 404', async () => {
             await testRequest({
                 method: 'PUT',
-                route: BANKS_ROUTE,
-                id: NOT_EXISTENT_BANK_ID,
+                route: CATEGORIES_ROUTE,
+                id: NOT_EXISTENT_CATEGORY_ID,
                 body: {
-                    name: NEW_TEST_BANK_NAME
+                    name: NEW_TEST_CATEGORY_NAME
                 },
                 resCode: 404
             })
         })
     })
 
-    describe(`[DELETE ${BANKS_ROUTE}/:id]`, () => {
+    describe(`[DELETE ${CATEGORIES_ROUTE}/:id]`, () => {
         it('Should response 200', async () => {
             await testRequest({
                 method: 'DELETE',
-                route: BANKS_ROUTE,
+                route: CATEGORIES_ROUTE,
                 id: idState.state,
                 resCode: 200
             })
@@ -138,8 +165,8 @@ describe('Banks', () => {
         it('Should response 404, when does not exist', async () => {
             await testRequest({
                 method: 'DELETE',
-                route: BANKS_ROUTE,
-                id: NOT_EXISTENT_BANK_ID,
+                route: CATEGORIES_ROUTE,
+                id: NOT_EXISTENT_CATEGORY_ID,
                 resCode: 404
             })
         })

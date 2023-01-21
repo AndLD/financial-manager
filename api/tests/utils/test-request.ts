@@ -7,7 +7,7 @@ const url = `http://${host}:${port}`
 
 const server: any = supertest.agent(url)
 
-export async function testRequest(
+export async function testRequest<T>(
     {
         method = 'GET',
         route,
@@ -22,7 +22,7 @@ export async function testRequest(
         route: string
         id?: string | number
         query?: { [key: string]: string }
-        body?: any
+        body?: T
         resBody?: any
         resCode?: number
         auth?: string

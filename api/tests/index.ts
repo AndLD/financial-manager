@@ -1,13 +1,12 @@
 import { SaveOptions } from 'typeorm'
 import { startApp, stopApp } from '../app'
-import { createDataSource, dataSource } from '../models'
+import { dataSource } from '../models'
 import { Bank } from '../models/entities/Bank'
 import { Category } from '../models/entities/Category'
 import { Transaction } from '../models/entities/Transaction'
 import { TransactionCategory } from '../models/entities/TransactionCategory'
 import { Table } from '../utils/types'
-
-const _dataSource = createDataSource('test')
+import { testDataSource } from './utils/data-source'
 
 function ensureStringIsTable(str: string): str is Table {
     return str in Table
@@ -24,13 +23,13 @@ const idsToCleanupAfterAll: {
 
 beforeAll(async () => {
     await startApp()
-    await _dataSource.initialize()
+    await testDataSource.initialize()
 
     for (const key in Table) {
         if (ensureStringIsTable(key)) {
             jest.spyOn(dataSource.getRepository(getEntityByTable(key)), 'save').mockImplementation(
                 async (entity: any, options?: SaveOptions | undefined) => {
-                    const result = await _dataSource.getRepository(getEntityByTable(key)).save(entity, options)
+                    const result = await testDataSource.getRepository(getEntityByTable(key)).save(entity, options)
 
                     if (result.id) {
                         idsToCleanupAfterAll[key].push(result.id)
@@ -59,6 +58,8 @@ function getEntityByTable(table: Table) {
 afterAll(async () => {
     let promises: Promise<any>[] = []
 
+    console.log('idsToCleanupAfterAll', idsToCleanupAfterAll)
+
     // Clean up created entities from DB after all
     let key: Table
     for (key in idsToCleanupAfterAll) {
@@ -70,6 +71,6 @@ afterAll(async () => {
     }
     await Promise.all(promises)
 
-    promises = [_dataSource.destroy(), stopApp()]
+    promises = [testDataSource.destroy(), stopApp()]
     await Promise.all(promises)
 })

@@ -65,6 +65,7 @@ export const categoriesRouterSchemas: IEntityOperations = {
         summary: 'Update category by id',
         body: {
             type: 'object',
+            required: ['name'],
             properties: {
                 name: {
                     type: 'string'

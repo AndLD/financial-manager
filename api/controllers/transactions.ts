@@ -82,6 +82,10 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
 }
 
 async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody }>, reply: FastifyReply) {
+    if (!req.body.transactionCategories.length) {
+        return reply.status(400).send({ message: 'TransactionCategories array should not be empty', statusCode: 400 })
+    }
+
     await dataSource.transaction(async (transactionalManager) => {
         const insertResult = await dataSource
             .getRepository(Transaction)

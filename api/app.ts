@@ -28,16 +28,18 @@ export function startApp() {
         await app.register(fastifySwaggerUi, {
             prefix: '/swagger'
         })
-
         app.register(apiRouter, { prefix: '/api' })
 
         app.setErrorHandler(function (error: FastifyError, _, reply) {
+            if (error.message.startsWith('duplicate key value violates unique constraint')) {
+                error.statusCode = 400
+            }
+
             this.log.error(error)
             reply.status(error.statusCode || 500).send({ message: error.message, statusCode: error.statusCode || 500 })
         })
 
         await app.ready()
-
         app.swagger()
 
         await dataSource.initialize()
