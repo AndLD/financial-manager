@@ -3,7 +3,6 @@ import fastifyHelmet from '@fastify/helmet'
 import { fastifySwagger } from '@fastify/swagger'
 import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import fastify, { FastifyError } from 'fastify'
-import fs from 'fs'
 import 'reflect-metadata'
 import { dataSource } from './models'
 import { apiRouter } from './routers'
@@ -39,12 +38,7 @@ export function startApp() {
 
         await app.ready()
 
-        const yaml = app.swagger({ yaml: true })
-        fs.writeFile('./swagger.yaml', yaml, (err) => {
-            if (err) {
-                app.log.error(err)
-            }
-        })
+        app.swagger()
 
         await dataSource.initialize()
 

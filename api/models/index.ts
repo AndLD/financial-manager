@@ -7,10 +7,11 @@ import { TransactionCategory } from './entities/TransactionCategory'
 
 export const dataSource = createDataSource()
 
-export function createDataSource() {
+export function createDataSource(name: string = 'default') {
     const port = process.env.POSTGRES_PORT
 
     return new DataSource({
+        name,
         type: 'postgres',
         host: process.env.POSTGRES_HOST || process.env.NODE_ENV == 'production' ? 'fm_postgres' : '127.0.0.1',
         port: port ? parseInt(port) : 5432,

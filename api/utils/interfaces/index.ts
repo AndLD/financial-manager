@@ -1,4 +1,5 @@
 import { FastifySchema } from 'fastify'
+import { Table } from '../types'
 
 export interface IEntityOperations {
     get: FastifySchema
@@ -6,4 +7,13 @@ export interface IEntityOperations {
     post?: FastifySchema
     put?: FastifySchema
     delete?: FastifySchema
+}
+
+export const idsToCleanupAfterAll: {
+    [key in Table]: number[]
+} = {
+    banks: [],
+    categories: [],
+    transactions: [],
+    transaction_categories: []
 }

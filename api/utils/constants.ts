@@ -17,3 +17,7 @@ export const errors = {
     WRONG_ACTION: { message: 'Wrong action', statusCode: 403 },
     ARRAY_CONTAINS_NOT_UNIQUE: { message: 'Array contains not unique', statusCode: 400 }
 }
+
+export const consoleColors = {
+    fgRed: '\x1b[31m'
+}
