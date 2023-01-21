@@ -5,6 +5,7 @@ export default async (): Promise<Config> => {
         preset: 'ts-jest',
         testEnvironment: 'node',
         setupFilesAfterEnv: ['./tests/setup.ts'],
+        coverageDirectory: './tests/coverage',
         verbose: true
     }
 }

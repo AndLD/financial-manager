@@ -69,6 +69,7 @@ export const banksRouterSchemas: IEntityOperations = {
         summary: 'Update bank by id',
         body: {
             type: 'object',
+            required: ['name'],
             properties: {
                 name: {
                     type: 'string'
