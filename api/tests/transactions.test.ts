@@ -1,5 +1,4 @@
 import { Bank } from '../models/entities/Bank'
-import { idsToCleanupAfterAll } from '../utils/interfaces'
 import { IPostTransactionBody, TransactionType } from '../utils/interfaces/transaction'
 import {
     NOT_EXISTENT_TRANSACTION_ID,
@@ -7,7 +6,7 @@ import {
     TRANSACTIONS_CATEGORY_AMOUNT_2,
     TRANSACTIONS_ROUTE
 } from './utils/constants'
-import { testDataSource } from './utils/data-source'
+import { idsToCleanupAfterAll, testDataSource } from './utils/data-source'
 import { useState } from './utils/hooks'
 import { postBank, postCategory } from './utils/requests'
 import { testRequest } from './utils/test-request'
@@ -43,21 +42,9 @@ describe('Transactions', () => {
 
             idsToCleanupAfterAll['banks'].push(bankIdState.state)
             idsToCleanupAfterAll['categories'].push(...categoryIdsState.state)
-
-            console.log(idsToCleanupAfterAll)
         })
 
         it('Should response 200', async () => {
-            console.log('CHANGE 1', bankIdState.state, [
-                {
-                    categoryId: categoryIdsState.state[0],
-                    amount: TRANSACTIONS_CATEGORY_AMOUNT
-                },
-                {
-                    categoryId: categoryIdsState.state[1],
-                    amount: TRANSACTIONS_CATEGORY_AMOUNT_2
-                }
-            ])
             await testRequest<IPostTransactionBody>(
                 {
                     method: 'POST',
@@ -143,20 +130,48 @@ describe('Transactions', () => {
     })
 
     describe(`[GET ${TRANSACTIONS_ROUTE}] Get all Transactions`, () => {
+        it("Should response 400, when 'page' query property not specified", async () => {
+            await testRequest({
+                method: 'GET',
+                route: TRANSACTIONS_ROUTE,
+                resCode: 400,
+                resBody: {
+                    message: `querystring must have required property 'page'`,
+                    statusCode: 400
+                }
+            })
+        })
+
+        it("Should response 400, when 'page' query property is less than 0", async () => {
+            await testRequest({
+                method: 'GET',
+                route: TRANSACTIONS_ROUTE,
+                query: {
+                    page: -1
+                },
+                resCode: 400,
+                resBody: { message: 'Pagination parameters should be positive numbers', statusCode: 400 }
+            })
+        })
+
         it('Should response 200', async () => {
             await testRequest(
                 {
                     method: 'GET',
                     route: TRANSACTIONS_ROUTE,
+                    query: {
+                        page: 1
+                    },
                     resCode: 200
                 },
                 (res) => {
-                    expect(Array.isArray(res.body)).toBe(true)
-                    expect(res.body).toEqual(
+                    expect(Array.isArray(res.body.transactions)).toBe(true)
+                    expect(res.body.transactions).toEqual(
                         expect.arrayContaining([
                             {
                                 id: transactionIdState.state,
                                 amount: TRANSACTIONS_CATEGORY_AMOUNT + TRANSACTIONS_CATEGORY_AMOUNT_2,
+                                timestamp: expect.any(String),
                                 type:
                                     TRANSACTIONS_CATEGORY_AMOUNT + TRANSACTIONS_CATEGORY_AMOUNT_2 >= 0
                                         ? TransactionType.PROFITABLE
@@ -175,6 +190,12 @@ describe('Transactions', () => {
                             }
                         ])
                     )
+
+                    expect(res.body.meta).toEqual({
+                        page: 1,
+                        size: expect.any(Number),
+                        total: expect.any(Number)
+                    })
                 }
             )
         })

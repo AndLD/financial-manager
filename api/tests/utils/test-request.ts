@@ -21,7 +21,7 @@ export async function testRequest<T>(
         method?: HTTPMethods
         route: string
         id?: string | number
-        query?: { [key: string]: string }
+        query?: { [key: string]: string | number }
         body?: T
         resBody?: any
         resCode?: number

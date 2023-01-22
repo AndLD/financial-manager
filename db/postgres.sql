@@ -19,7 +19,7 @@ CREATE TABLE transaction_categories (
     id SERIAL PRIMARY KEY,
     amount FLOAT NOT NULL,
     category_id INTEGER NOT NULL REFERENCES categories ON DELETE RESTRICT,
-    transaction_id INTEGER NOT NULL REFERENCES transactions ON DELETE CASCADE,
+    transaction_id INTEGER REFERENCES transactions ON DELETE CASCADE,
 
     UNIQUE (category_id, transaction_id)
 );
@@ -40,18 +40,18 @@ AFTER INSERT ON transaction_categories
 FOR EACH ROW
 EXECUTE FUNCTION tr_transaction_categories_insert_fnc();
 
-CREATE OR REPLACE FUNCTION tr_transaction_categories_delete_fnc()
+CREATE OR REPLACE FUNCTION tr_transactions_delete_fnc()
 RETURNS trigger AS
 $$
     BEGIN
-        UPDATE banks SET balance = balance - OLD.amount WHERE id = (SELECT bank_id FROM transactions WHERE id = OLD.transaction_id);
+        UPDATE banks SET balance = balance - (SELECT SUM(amount) FROM transaction_categories WHERE transaction_id = OLD.id) WHERE id = OLD.bank_id;
 
-        RETURN NULL;
+        RETURN OLD;
     END;
 $$
 LANGUAGE 'plpgsql';
 
-CREATE TRIGGER tr_transaction_categories_delete
-AFTER DELETE ON transaction_categories
+CREATE TRIGGER tr_transactions_delete
+BEFORE DELETE ON transactions
 FOR EACH ROW
-EXECUTE FUNCTION tr_transaction_categories_delete_fnc();
+EXECUTE FUNCTION tr_transactions_delete_fnc();

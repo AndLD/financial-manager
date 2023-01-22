@@ -1,4 +1,4 @@
-import { SaveOptions } from 'typeorm'
+import { ObjectLiteral, SaveOptions } from 'typeorm'
 import { startApp, stopApp } from '../app'
 import { dataSource } from '../models'
 import { Bank } from '../models/entities/Bank'
@@ -6,19 +6,10 @@ import { Category } from '../models/entities/Category'
 import { Transaction } from '../models/entities/Transaction'
 import { TransactionCategory } from '../models/entities/TransactionCategory'
 import { Table } from '../utils/types'
-import { testDataSource } from './utils/data-source'
+import { idsToCleanupAfterAll, testDataSource } from './utils/data-source'
 
 function ensureStringIsTable(str: string): str is Table {
     return str in Table
-}
-
-const idsToCleanupAfterAll: {
-    [key in Table]: number[]
-} = {
-    banks: [],
-    categories: [],
-    transactions: [],
-    transaction_categories: []
 }
 
 beforeAll(async () => {
@@ -56,17 +47,16 @@ function getEntityByTable(table: Table) {
 }
 
 afterAll(async () => {
-    let promises: Promise<any>[] = []
-
-    console.log('idsToCleanupAfterAll', idsToCleanupAfterAll)
+    let promises = []
 
     // Clean up created entities from DB after all
     let key: Table
     for (key in idsToCleanupAfterAll) {
         if (idsToCleanupAfterAll[key].length) {
             const query = dataSource.createQueryBuilder().delete().from(key)
-            idsToCleanupAfterAll[key].forEach((id) => query.where('id = :id', { id }))
-            promises.push(query.execute())
+            const whereElements: ObjectLiteral[] = []
+            idsToCleanupAfterAll[key].forEach((id) => whereElements.push([`id = ${id}`]))
+            promises.push(query.where(whereElements.join(' OR ')).execute())
         }
     }
     await Promise.all(promises)

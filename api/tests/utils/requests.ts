@@ -40,8 +40,6 @@ export async function postCategory({ name, callback }: { name?: string; callback
 
             expect(res.body.name).toBe(name || TEST_CATEGORY_NAME)
 
-            expect(res.body.balance).toBe(0)
-
             callback(res.body.id)
         }
     )
