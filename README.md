@@ -18,7 +18,7 @@ docker-compose build
 docker-compose up
 ```
 
-Otherwise you can start only database docker container and get up development server.
+Also you can start only database docker container and get up development server.
 
 2. Go to http://localhost:8080/swagger
 
