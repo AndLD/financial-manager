@@ -24,6 +24,8 @@ Also you can start only database docker container and get up development server.
 
 ## Testing
 
+**Coverage: 99%**
+
 1. Install dependencies (in "/api" folder):
 
 ```cmd
