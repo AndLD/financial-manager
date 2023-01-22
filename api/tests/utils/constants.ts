@@ -12,3 +12,8 @@ export const TRANSACTIONS_ROUTE = '/api/transactions'
 export const TRANSACTIONS_CATEGORY_AMOUNT = 440
 export const TRANSACTIONS_CATEGORY_AMOUNT_2 = 340
 export const NOT_EXISTENT_TRANSACTION_ID = 10000
+
+export const FIRST_CATEGORY_NAME = 'First Category'
+export const SECOND_CATEGORY_NAME = 'Second Category'
+
+export const STATISTICS_ROUTE = '/api/statistics'

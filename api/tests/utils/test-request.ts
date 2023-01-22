@@ -43,7 +43,11 @@ export async function testRequest<T>(
         .send(body)
         .expect(resCode)
 
-    resBody && expect(res.body).toEqual(expect.objectContaining(resBody))
+    if (resBody) {
+        expect(res.body).toEqual(expect.objectContaining(resBody))
+    }
 
-    callback && callback(res)
+    if (callback) {
+        await callback(res)
+    }
 }

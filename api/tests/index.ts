@@ -46,17 +46,19 @@ function getEntityByTable(table: Table) {
     }
 }
 
+// Clean up created entities from DB, close DB connection, stop server
 afterAll(async () => {
-    let promises = []
+    if (idsToCleanupAfterAll.transactions.length) {
+        await deleteEntitiesFromTable(Table.TRANSACTIONS)
+        idsToCleanupAfterAll.transactions = []
+    }
 
-    // Clean up created entities from DB after all
+    let promises: Promise<any>[] = []
+
     let key: Table
     for (key in idsToCleanupAfterAll) {
         if (idsToCleanupAfterAll[key].length) {
-            const query = dataSource.createQueryBuilder().delete().from(key)
-            const whereElements: ObjectLiteral[] = []
-            idsToCleanupAfterAll[key].forEach((id) => whereElements.push([`id = ${id}`]))
-            promises.push(query.where(whereElements.join(' OR ')).execute())
+            deleteEntitiesFromTable(key, promises)
         }
     }
     await Promise.all(promises)
@@ -64,3 +66,16 @@ afterAll(async () => {
     promises = [testDataSource.destroy(), stopApp()]
     await Promise.all(promises)
 })
+
+function deleteEntitiesFromTable(table: Table, promises?: Promise<any>[]) {
+    const query = dataSource.createQueryBuilder().delete().from(table)
+    const whereElements: ObjectLiteral[] = []
+    idsToCleanupAfterAll[table].forEach((id) => whereElements.push([`id = ${id}`]))
+
+    const queryPromise = query.where(whereElements.join(' OR ')).execute()
+    if (promises) {
+        promises.push(queryPromise)
+    }
+
+    return queryPromise
+}

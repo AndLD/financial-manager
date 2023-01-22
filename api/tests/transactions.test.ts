@@ -1,4 +1,5 @@
 import { Bank } from '../models/entities/Bank'
+import { errors } from '../utils/constants'
 import { IPostTransactionBody, TransactionType } from '../utils/interfaces/transaction'
 import {
     NOT_EXISTENT_TRANSACTION_ID,
@@ -8,7 +9,7 @@ import {
 } from './utils/constants'
 import { idsToCleanupAfterAll, testDataSource } from './utils/data-source'
 import { useState } from './utils/hooks'
-import { postBank, postCategory } from './utils/requests'
+import { postBank, postCategory, postTransaction } from './utils/requests'
 import { testRequest } from './utils/test-request'
 
 describe('Transactions', () => {
@@ -16,12 +17,16 @@ describe('Transactions', () => {
     const [bankIdState, setBankId] = useState<number | null>(null)
     const [categoryIdsState, setCategoryIds] = useState<number[]>([])
 
+    const TEST_BANK_NAME = 'Transactions Bank'
+    const FIRST_CATEGORY_NAME = 'TrCat1'
+    const SECOND_CATEGORY_NAME = 'TrCat2'
+
     describe(`[POST ${TRANSACTIONS_ROUTE}] Add Transaction`, () => {
         beforeAll(async () => {
             const promises = []
 
             // Add Bank
-            promises.push(postBank({ callback: setBankId }))
+            promises.push(postBank({ name: TEST_BANK_NAME, callback: setBankId }))
             // Add 2 Categories
             const postCategoryCallback = (id: number) => {
                 setCategoryIds([...categoryIdsState.state, id])
@@ -29,11 +34,11 @@ describe('Transactions', () => {
 
             promises.push(
                 postCategory({
-                    name: 'First Category',
+                    name: FIRST_CATEGORY_NAME,
                     callback: postCategoryCallback
                 }),
                 postCategory({
-                    name: 'Second Category',
+                    name: SECOND_CATEGORY_NAME,
                     callback: postCategoryCallback
                 })
             )
@@ -45,51 +50,11 @@ describe('Transactions', () => {
         })
 
         it('Should response 200', async () => {
-            await testRequest<IPostTransactionBody>(
-                {
-                    method: 'POST',
-                    route: TRANSACTIONS_ROUTE,
-                    body: {
-                        bankId: bankIdState.state,
-                        transactionCategories: [
-                            {
-                                categoryId: categoryIdsState.state[0],
-                                amount: TRANSACTIONS_CATEGORY_AMOUNT
-                            },
-                            {
-                                categoryId: categoryIdsState.state[1],
-                                amount: TRANSACTIONS_CATEGORY_AMOUNT_2
-                            }
-                        ]
-                    },
-                    resBody: {
-                        id: expect.any(Number),
-                        amount: TRANSACTIONS_CATEGORY_AMOUNT + TRANSACTIONS_CATEGORY_AMOUNT_2,
-                        type:
-                            TRANSACTIONS_CATEGORY_AMOUNT + TRANSACTIONS_CATEGORY_AMOUNT_2 >= 0
-                                ? TransactionType.PROFITABLE
-                                : TransactionType.CONSUMABLE,
-                        bankId: bankIdState.state,
-                        transactionCategories: [
-                            {
-                                categoryId: categoryIdsState.state[0],
-                                amount: TRANSACTIONS_CATEGORY_AMOUNT
-                            },
-                            {
-                                categoryId: categoryIdsState.state[1],
-                                amount: TRANSACTIONS_CATEGORY_AMOUNT_2
-                            }
-                        ]
-                    },
-                    resCode: 200
-                },
-                async (res) => {
-                    const bank = await testDataSource.getRepository(Bank).findOneBy({ id: bankIdState.state })
-                    expect(bank?.balance).toBe(TRANSACTIONS_CATEGORY_AMOUNT + TRANSACTIONS_CATEGORY_AMOUNT_2)
-
-                    setTransactionId(res.body.id)
-                }
-            )
+            await postTransaction({
+                bankId: bankIdState.state,
+                categoryIds: categoryIdsState.state,
+                callback: setTransactionId
+            })
         })
 
         it('Should response 400, when transactionCategories array is empty', async () => {
@@ -100,11 +65,12 @@ describe('Transactions', () => {
                     bankId: bankIdState.state,
                     transactionCategories: []
                 },
+                resBody: errors.TRANSACTION_CATEGORIES_EMPTY,
                 resCode: 400
             })
         })
 
-        it('Should response 400, when name is not specified', async () => {
+        it("Should response 400, when 'bankId' is not specified", async () => {
             await testRequest({
                 method: 'POST',
                 route: TRANSACTIONS_ROUTE,
@@ -122,6 +88,21 @@ describe('Transactions', () => {
                 },
                 resBody: {
                     message: `body must have required property 'bankId'`,
+                    statusCode: 400
+                },
+                resCode: 400
+            })
+        })
+
+        it("Should response 400, when 'transactionCategories' is not specified", async () => {
+            await testRequest({
+                method: 'POST',
+                route: TRANSACTIONS_ROUTE,
+                body: {
+                    bankId: bankIdState.state
+                },
+                resBody: {
+                    message: `body must have required property 'transactionCategories'`,
                     statusCode: 400
                 },
                 resCode: 400
@@ -150,7 +131,7 @@ describe('Transactions', () => {
                     page: -1
                 },
                 resCode: 400,
-                resBody: { message: 'Pagination parameters should be positive numbers', statusCode: 400 }
+                resBody: errors.INVALID_PAGINATION
             })
         })
 

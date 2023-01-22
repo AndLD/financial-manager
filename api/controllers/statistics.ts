@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { dataSource } from '../models'
+import { errors } from '../utils/constants'
 
 interface IGetStatisticsQuery {
     categoryIds: string
@@ -8,16 +9,16 @@ interface IGetStatisticsQuery {
 }
 
 async function getStatistics(req: FastifyRequest<{ Querystring: IGetStatisticsQuery }>, reply: FastifyReply) {
+    if (new Date(req.query.fromPeriod) > new Date(req.query.toPeriod)) {
+        throw errors.INVALID_DATE_PERIOD
+    }
+
     const categoryIds = req.query.categoryIds
 
     for (const categoryId of categoryIds.split(',')) {
         if (isNaN(parseInt(categoryId))) {
-            return reply.status(400).send({ message: 'Invalid categoryIds!', statusCode: 400 })
+            throw errors.INVALID_CATEGORY_IDS
         }
-    }
-
-    if (!categoryIds) {
-        return reply.status(400).send({ message: 'Wrong categoryIds query value', statusCode: 400 })
     }
 
     const { fromPeriod, toPeriod } = req.query

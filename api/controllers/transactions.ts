@@ -16,7 +16,7 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
     const size = req.query.size || 10
 
     if (page <= 0 || size <= 0) {
-        return reply.status(400).send({ message: 'Pagination parameters should be positive numbers', statusCode: 400 })
+        throw errors.INVALID_PAGINATION
     }
 
     const total = dataSource.getRepository(Transaction).count()
@@ -83,7 +83,7 @@ async function getTransactions(req: FastifyRequest<{ Querystring: IGetTransactio
 
 async function postTransaction(req: FastifyRequest<{ Body: IPostTransactionBody }>, reply: FastifyReply) {
     if (!req.body.transactionCategories.length) {
-        return reply.status(400).send({ message: 'TransactionCategories array should not be empty', statusCode: 400 })
+        throw errors.TRANSACTION_CATEGORIES_EMPTY
     }
 
     await dataSource.transaction(async (transactionalManager) => {
@@ -120,7 +120,7 @@ async function deleteTransaction(req: FastifyRequest<{ Params: { id: number } }>
     const result = await dataSource.getRepository(Transaction).delete({ id: req.params.id })
 
     if (!result.affected) {
-        throw errors.DOC_NOT_FOUND
+        return reply.status(404).send()
     }
 
     reply.send()
