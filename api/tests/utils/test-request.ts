@@ -7,26 +7,19 @@ const url = `http://${host}:${port}`
 
 const server: any = supertest.agent(url)
 
+interface ITestRequestArgs<T> {
+    method?: HTTPMethods
+    route: string
+    id?: string | number
+    query?: { [key: string]: string | number }
+    body?: T
+    resBody?: any
+    resCode?: number
+    auth?: string
+}
+
 export async function testRequest<T>(
-    {
-        method = 'GET',
-        route,
-        id,
-        query,
-        body,
-        resBody: resBody,
-        resCode = 200,
-        auth
-    }: {
-        method?: HTTPMethods
-        route: string
-        id?: string | number
-        query?: { [key: string]: string | number }
-        body?: T
-        resBody?: any
-        resCode?: number
-        auth?: string
-    },
+    { method = 'GET', route, id, query, body, resBody: resBody, resCode = 200, auth }: ITestRequestArgs<T>,
     callback?: (res: Response) => void
 ) {
     const url = `${route}${id ? `/${id}` : ''}${

@@ -14,7 +14,12 @@ import { testRequest } from './test-request'
 
 type RequestCallback = (id: number) => void
 
-export async function postBank({ name, callback }: { name?: string; callback: RequestCallback }) {
+interface IPostBankParams {
+    name?: string
+    callback: RequestCallback
+}
+
+export async function postBank({ name, callback }: IPostBankParams) {
     await testRequest(
         {
             method: 'POST',
@@ -37,13 +42,18 @@ export async function postBank({ name, callback }: { name?: string; callback: Re
     )
 }
 
-export async function postCategory({ name, callback }: { name?: string; callback: RequestCallback }) {
+interface IPostCategoryParams {
+    name: string
+    callback: RequestCallback
+}
+
+export async function postCategory({ name, callback }: IPostCategoryParams) {
     await testRequest(
         {
             method: 'POST',
             route: CATEGORIES_ROUTE,
             body: {
-                name: name || TEST_CATEGORY_NAME
+                name
             },
             resCode: 200
         },
@@ -58,15 +68,13 @@ export async function postCategory({ name, callback }: { name?: string; callback
     )
 }
 
-export async function postTransaction({
-    bankId,
-    categoryIds,
-    callback
-}: {
+interface IPostTransactionParams {
     bankId: number
     categoryIds: number[]
     callback: RequestCallback
-}) {
+}
+
+export async function postTransaction({ bankId, categoryIds, callback }: IPostTransactionParams) {
     await testRequest<IPostTransactionBody>(
         {
             method: 'POST',
