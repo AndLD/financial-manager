@@ -25,19 +25,16 @@ describe('Statistics', () => {
             const postCategoryCallback = (id: number) => {
                 setCategoryIds([...categoryIdsState.state, id])
             }
-            promises.push(
-                postCategory({
-                    name: FIRST_CATEGORY_NAME,
-                    callback: postCategoryCallback
-                }),
-                postCategory({
-                    name: SECOND_CATEGORY_NAME,
-                    callback: postCategoryCallback
-                })
-            )
+            await postCategory({
+                name: FIRST_CATEGORY_NAME,
+                callback: postCategoryCallback
+            })
+            await postCategory({
+                name: SECOND_CATEGORY_NAME,
+                callback: postCategoryCallback
+            })
 
-            await Promise.all(promises)
-
+            // Add transaction
             await postTransaction({
                 bankId: bankIdState.state,
                 categoryIds: categoryIdsState.state,

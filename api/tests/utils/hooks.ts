@@ -1,24 +1,13 @@
-import { SetStateFunction, State, Subscriber } from './types'
+import { SetStateFunction, State } from './types'
 
-export function useState<Type>(initialState?: Type, ...subscribers: Subscriber[]): [State, SetStateFunction<Type>] {
+export function useState<Type>(initialState?: Type): [State, SetStateFunction<Type>] {
     const state: State = {
-        state: initialState,
-        subscribers
+        state: initialState
     }
 
     function setState(newState: Type) {
         state.state = newState
-
-        for (const sub of subscribers) {
-            sub(newState)
-        }
     }
 
     return [state, setState]
-}
-
-export function useEffect(subscriber: Subscriber, states: any[]) {
-    for (const state of states) {
-        state.subscribers.push(subscriber)
-    }
 }
